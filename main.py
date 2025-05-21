@@ -1,4 +1,3 @@
-
 import datetime
 import os
 import sys
@@ -42,12 +41,18 @@ with open("label_encoder.pkl", "rb") as encoder_file:
 def initialize_engine():
     engine = pyttsx3.init("sapi5")
     voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[1].id)
-    rate = engine.getProperty('rate')
-    engine.setProperty('rate', rate-50)
-    volume = engine.getProperty('volume')
-    engine.setProperty('volume', volume+0.25)
+
+    for voice in voices:
+        if "female" in voice.name.lower():
+            engine.setProperty('voice', voice.id)
+            break
+    else:
+        engine.setProperty('voice', voices[1].id)  
+
+    engine.setProperty('rate', 150)
+    engine.setProperty('volume', 1.0)  
     return engine
+
 
 def speak(text):
     engine = initialize_engine()
@@ -164,13 +169,23 @@ def closeApp(command):
 
 def browsing(query):
     if 'google' in query:
-        speak("Sir, what should i search on google..")
-        s = command().lower()
-        webbrowser.open(f"{s}")
-    # elif 'edge' in query:
-    #     speak("opening your microsoft edge")
-    #     os.startfile()
+        speak("Sir, what should I search on Google?")
+        search_term = command().lower()
+        if search_term and search_term != "none":
+            url = f"https://www.google.com/search?q={search_term}"
+            speak(f"Here are the search results for {search_term}")
+            webbrowser.open(url)
+        else:
+            speak("Sorry, I didn’t catch that.")
 
+def youtube_search():
+    speak("What should I search on YouTube?")
+    search = command().lower()
+    if search != "none":
+        url = f"https://www.youtube.com/results?search_query={search}"
+        speak(f"Searching YouTube for {search}")
+        webbrowser.open(url)
+        
 def condition():
     usage = str(psutil.cpu_percent())
     speak(f"CPU is at {usage} percentage")
@@ -187,7 +202,7 @@ def condition():
 
 if __name__ == "__main__":
     wishMe()
-    # engine_talk("Allow me to introduce myself I am Friday, the AI powered Desktop Assistence and I'm here to assist you with a variety of tasks as best I can, 24 hours a day seven days a week.")
+    #engine_talk("Allow me to introduce myself I am Friday, the AI powered Desktop Assistence and I'm here to assist you with a variety of tasks as best I can, 24 hours a day seven days a week.")
     while True:
         query = command().lower()
         # query  = input("Enter your command-> ")
@@ -218,9 +233,10 @@ if __name__ == "__main__":
                         speak(np.random.choice(i['responses']))
         elif ("open google" in query) or ("open edge" in query):
             browsing(query)
+        elif "youtube" in query:
+            youtube_search()    
         elif ("system condition" in query) or ("condition of the system" in query):
             speak("checking the system condition")
             condition()
         elif "exit" in query:
             sys.exit()
-# speak("Hello, I'm JARVIS")
